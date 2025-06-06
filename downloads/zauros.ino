@@ -17,12 +17,31 @@
 #define GRID_SIZE 10
 #define MAX_LENGTH 30
 
-#define VER "v1.0"
+#define VER "v2.0"
 
 struct SnakeSegment {
   int x, y;
 };
 
+struct TouchZone {
+  int x0, y0, x1, y1;
+  int cellX, cellY;
+};
+
+TouchZone zones[9] = {
+  {3520, 380, 2660, 1420, 0, 0},
+  {2660, 380, 1780, 1420, 1, 0},
+  {1780, 380, 800, 1420, 2, 0},
+  {3520, 1420, 2660, 2630, 0, 1},
+  {2660, 1420, 1780, 2630, 1, 1},
+  {1780, 1420, 800, 2630, 2, 1},
+  {3520, 2500, 2660, 3660, 0, 2},
+  {2660, 2500, 1780, 3660, 1, 2},
+  {1780, 2500, 800, 3660, 2, 2}
+};
+
+int board[3][3];  // 0 = empty, 1 = X, 2 = O
+bool turnX = true;
 
 int menu = 0;
 String history[3];  // 3-element array
@@ -61,6 +80,10 @@ void setup() {
   } else {
     Serial.println("SD card initialized.");
   }
+  for (int y = 0; y < 3; y++)
+    for (int x = 0; x < 3; x++)
+      board[y][x] = 0;  // 0 = empty
+
   delay(2000);
   load();
 }
@@ -79,30 +102,33 @@ void loop() {
     delay(100);
   }
   if (menu == -2) {
-    load();
+    loopSnake();
+    updateDirection();
   }
 }
 
-
 void load() {
   switch (menu) {
-    case -2:
-      loopSnake();
-      updateDirection();
+    case -3:  // Games
       break;
-    case -1:
+    case -2:
+      break;
+    case -1: // System
       break;
     case 0:
-      dMenu();
+      dMenu();  // Menu
       break;
     case 1:
       dSys();
       break;
-    case 2:
+    case 2: 
       dSusp();
       break;
     case 3:
       dSnake();
+      break;
+    case 4:
+      dTicTacToe();
       break;
     default:
       dErr("Error: screen not recognized!!! Reset the system and report the problem.");
@@ -131,16 +157,17 @@ void dMenu() {
   tft.print(hist());
   tft.setCursor(245, 10);
   tft.print("ZaurOS");
-  tft.setCursor(10, 220);
-  tft.print("www.zauros.com"); // Placeholder for actual website
-  tft.setCursor(250, 220);
+  tft.setCursor(10, 230);
+  tft.setTextSize(1);
+  tft.print("Website: https://ankylozaur.github.io/ZaurOS-for-Arduino/"); // Placeholder for actual website
+  tft.setCursor(250, 230);
   tft.print(VER);
   tft.fillRect(20, 50, 100, 40, ST77XX_BLUE);    // Filled blue rectangle
   tft.drawRect(20, 50, 100, 40, ST77XX_WHITE);   // White border
-  tft.setCursor(25, 65);
+  tft.setCursor(35, 65);
   tft.setTextColor(ST77XX_WHITE);
   tft.setTextSize(2);
-  tft.print("Credits");
+  tft.print("Info");
   tft.fillRect(140, 50, 100, 40, ST77XX_BLUE);    // Filled blue rectangle
   tft.drawRect(140, 50, 100, 40, ST77XX_WHITE);   // White border
   tft.setCursor(155, 65);
@@ -212,7 +239,8 @@ void dSusp() {
   tft.setTextSize(2);
   tft.setCursor(100, 140);
   tft.print("Sleeping...");
-  tft.setCursor(250, 220);
+  tft.setTextSize(1);
+  tft.setCursor(250, 240);
   tft.print(VER);
   if(ts.touched()) {
     menu = 0;
@@ -257,7 +285,7 @@ void drawSquare(int x, int y, uint16_t color) {
 void updateDirection() {
   if (ts.touched()) {
     TS_Point p = ts.getPoint();
-    if (p.y < 1600) { dirX = 0; dirY = -1; } // Up
+    if (p.y < 1200) { dirX = 0; dirY = -1; } // Up
     else if (p.y > 3000) { dirX = 0; dirY = 1; } // Down
     else if (p.x < 1000) { dirX = 1; dirY = 0; } // Right
     else if (p.x > 2800) { dirX = -1; dirY = 0; } // Left
@@ -267,6 +295,7 @@ void updateDirection() {
 void dSnake() {
   menu = -2;
   tft.fillScreen(ST77XX_BLACK);
+  snakeLength = 3;
   snake[0] = {5, 5};
   snake[1] = {4, 5};
   snake[2] = {3, 5};
@@ -337,6 +366,10 @@ void loopSnake() {
   for (int i = 0; i < snakeLength; i++) {
     drawSquare(snake[i].x, snake[i].y, ST77XX_WHITE);
   }
-
-  delay(1000); // game speed
+  if (ts.touched()) {
+    delay(400);
+  } else {
+    delay(800);
+  ;}
+  
 }

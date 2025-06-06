@@ -32,12 +32,12 @@ h1, h2 {
   font-family: 'Segoe UI Semibold', Arial, sans-serif;
 }
 
-.features ul {
+ul {
   list-style: none;
   padding: 0;
 }
 
-.features li {
+li {
   background: #4a4e69;
   color: #f2e9e4;
   margin: 0.5rem 0;
@@ -47,7 +47,7 @@ h1, h2 {
   transition: background 0.2s;
 }
 
-.features li:hover {
+li:hover {
   background: #22223b;
 }
 
